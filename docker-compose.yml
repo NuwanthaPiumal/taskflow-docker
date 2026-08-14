@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  api:
+    build: ./api
+    # No fixed container_name -- required so we can scale to multiple replicas
+    environment:
+      DB_HOST: db
+      DB_NAME: taskflow
+      DB_USER: taskflow
+      DB_PASSWORD: taskflow
+      REDIS_HOST: cache
+    depends_on:
+      - db
+      - cache
+    volumes:
+      - ./api:/app          # bind mount: live-edit app.py without rebuilding
+    networks:
+      - taskflow-net
+    # No "ports:" here on purpose once we scale -- nginx is the single
+    # entrypoint. While learning solo, you can temporarily add:
+    # ports:
+    #   - "5000:5000"
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: taskflow
+      POSTGRES_USER: taskflow
+      POSTGRES_PASSWORD: taskflow
+    volumes:
+      - db-data:/var/lib/postgresql/data   # named volume: survives container removal
+    networks:
+      - taskflow-net
+
+  cache:
+    image: redis:7-alpine
+    networks:
+      - taskflow-net
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"           # host:container -- browse to localhost:8080
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    networks:
+      - taskflow-net
+
+networks:
+  taskflow-net:
+    driver: bridge
+
+volumes:
+  db-data:
