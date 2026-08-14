@@ -117,16 +117,16 @@ Bring the whole stack up:
 docker compose up -d --build or docker-compose up -d --build
 
 # See all services and their status
-docker compose ps
+docker-compose ps
 
 # Follow logs across every service at once
-docker compose logs -f
+docker-compose logs -f
 
 # Follow logs from just one service
-docker compose logs -f api
+docker-compose logs -f api
 
 # Run a command inside a compose-managed container
-docker compose exec db psql -U taskflow -d taskflow -c "SELECT * FROM tasks;"
+docker-compose exec db psql -U taskflow -d taskflow -c "SELECT * FROM tasks;"
 ```
 
 Visit **http://localhost:8080/tasks** — should return `[]`.
@@ -140,8 +140,8 @@ curl http://localhost:8080/tasks
 
 Tear down:
 ```bash
-docker compose down          # stops + removes containers, keeps volumes
-docker compose down -v       # also deletes the named volume (fresh start)
+docker-compose down          # stops + removes containers, keeps volumes
+docker-compose down -v       # also deletes the named volume (fresh start)
 ```
 
 **Checkpoint:**
@@ -155,9 +155,9 @@ docker compose down -v       # also deletes the named volume (fresh start)
 Bring it back up, then scale the `api` service to 3 replicas:
 
 ```bash
-docker compose up -d --build
-docker compose up -d --scale api=3
-docker compose ps
+docker-compose up -d --build
+docker-compose up -d --scale api=3
+docker-compose ps
 ```
 
 You'll see `taskflow-docker-api-1`, `-2`, `-3`. Hit the API repeatedly through nginx and watch `served_by_container` change:
@@ -170,7 +170,7 @@ nginx is load-balancing across all 3 replicas, and `hit_count` (from Redis) keep
 
 Scale back down:
 ```bash
-docker compose up -d --scale api=1
+docker-compose up -d --scale api=1
 ```
 
 **Checkpoint:**
@@ -186,21 +186,21 @@ Two different mount types are already in your compose file — go find them and 
 1. **Bind mount** (`api` service): `./api:/app`
    Maps your local `api/` folder directly into the container. Edit `app.py` on your machine, then:
    ```bash
-   docker compose restart api
+   docker-compose restart api
    ```
    No rebuild needed — the file is live on disk inside the container. Try adding a new field to the `/health` response and restarting to see it.
 
 2. **Named volume** (`db` service): `db-data:/var/lib/postgresql/data`
    Managed by Docker, not tied to a host folder. Proves persistence:
    ```bash
-   docker compose down          # containers gone
-   docker compose up -d         # containers recreated
+   docker-compose down          # containers gone
+   docker-compose up -d         # containers recreated
    curl http://localhost:8080/tasks   # your task is still there
    ```
    Now really destroy it:
    ```bash
-   docker compose down -v       # -v removes named volumes too
-   docker compose up -d --build
+   docker-compose down -v       # -v removes named volumes too
+   docker-compose up -d --build
    curl http://localhost:8080/tasks   # back to []
    ```
 
@@ -214,7 +214,7 @@ docker volume inspect taskflow-docker_db-data
 
 **Checkpoint:**
 - Why is a bind mount good for `api` (your own code) but a named volume better for `db` (Postgres's internal data files)?
-- If you `docker compose down -v`, which of your data survives and which doesn't?
+- If you `docker-compose down -v`, which of your data survives and which doesn't?
 
 ---
 
