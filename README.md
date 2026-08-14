@@ -114,7 +114,7 @@ Doing Part 1+2 by hand for 4 containers is tedious — that's the problem Compos
 Bring the whole stack up:
 
 ```bash
-docker compose up -d --build
+docker compose up -d --build or docker-compose up -d --build
 
 # See all services and their status
 docker compose ps
